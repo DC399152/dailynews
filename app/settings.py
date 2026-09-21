@@ -28,6 +28,20 @@ class Settings(BaseSettings):
     agent_run_timeout_seconds: int = Field(default=180, ge=1, le=3600)
     tool_timeout_seconds: int = Field(default=15, ge=1, le=300)
 
+    tool_max_read_bytes: int = Field(default=1_000_000, ge=1)
+    tool_max_write_bytes: int = Field(default=1_000_000, ge=1)
+    tool_max_output_chars: int = Field(default=20_000, ge=1)
+    fetch_max_response_bytes: int = Field(default=2_000_000, ge=1)
+    fetch_max_article_chars: int = Field(default=20_000, ge=1)
+
+    smtp_enabled: bool = False
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_use_tls: bool = True
+
 
 @lru_cache
 def get_settings() -> Settings:

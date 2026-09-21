@@ -10,6 +10,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from app.agent.types import ToolCall, ToolDefinition, ToolExecution
+from app.tools.errors import ToolFailure
 
 ToolHandler = Callable[[BaseModel], Any | Coroutine[Any, Any, Any]]
 
@@ -83,6 +84,13 @@ class ToolRegistry:
                 started,
                 code="tool_timeout",
                 message=f"Tool exceeded {timeout_seconds:g} seconds",
+            )
+        except ToolFailure as exc:
+            return self._failure(
+                call,
+                started,
+                code=exc.code,
+                message=str(exc),
             )
         except Exception as exc:  # noqa: BLE001 - tool failures become model observations
             return self._failure(

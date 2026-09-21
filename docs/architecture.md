@@ -86,3 +86,12 @@ that retain the trace and counters accumulated before failure.
 The submission scheduler is designed for one application process. A production
 multi-replica deployment would move scheduling and jobs to a dedicated worker and
 queue. This trade-off is deliberate and will be documented rather than disguised.
+
+The subscription tool currently depends on a small provider protocol and uses an
+in-memory implementation in the default factory. Day 3 will replace that provider
+with the SQLAlchemy repository without changing the Agent-facing tool contract.
+
+RSS endpoints are trusted application configuration, not model-controlled URLs.
+Article URLs are model-controlled and therefore receive stricter validation. DNS
+addresses and every redirect target are checked before requests, although preventing
+DNS rebinding completely would require a transport that pins the validated address.

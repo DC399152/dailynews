@@ -11,11 +11,11 @@ termination are decided by the model rather than encoded as a fixed pipeline.
 
 ## Current status
 
-Day 0 and Day 1 are complete. The repository now includes the engineering baseline
-and a tested, model-driven Agent Loop with a provider-neutral client protocol,
-OpenAI-compatible adapter, validated Tool Registry, structured trace, deterministic
-FakeModel, and turn/tool/time budgets. Safe filesystem, shell, news, and delivery
-tools are the next milestone.
+Day 0 through Day 2 are complete. The repository now includes the engineering
+baseline; a tested, model-driven Agent Loop; and all nine planned tools. The tool
+layer confines file access to the workspace, restricts shell execution, normalizes
+RSS results, checks article URLs against private-network access, and supports SMTP or
+a credential-free development outbox.
 
 The Loop deliberately has no news-specific branching. Tests demonstrate that the
 same runtime follows `search -> write` or `write -> search` solely from model tool
@@ -44,7 +44,7 @@ complex authentication, Redis/Celery/Kafka, a JavaScript SPA, or durable process
 resume. These would dilute the assignment's core signal and the one-week delivery
 budget.
 
-## Planned tool surface
+## Tool surface
 
 Required by the assignment:
 
@@ -65,10 +65,10 @@ fetch_article(url)
 send_digest(user_id, subject, content)
 ```
 
-All filesystem access will be confined to `workspace/`. Shell execution will use a
-command allowlist, fixed working directory, timeout, output cap, and filtered
-environment. Article fetching will reject private-network targets and cap response
-size.
+All filesystem access is confined to `workspace/`. Shell execution uses a command
+allowlist, fixed working directory, timeout, output cap, and filtered environment.
+Article fetching rejects private-network targets and caps response size. See
+[`docs/tool-security.md`](docs/tool-security.md) for precise controls and limitations.
 
 ## Architecture
 
@@ -134,3 +134,11 @@ development outbox so the complete flow remains testable without mail credential
 The ordered implementation backlog and acceptance criteria are in
 [`docs/backlog.md`](docs/backlog.md). Development is intentionally incremental: each
 feature must remain runnable, tested, and reviewable before the next feature begins.
+
+## Test coverage
+
+The test suite does not require model, news, or SMTP credentials. It covers alternate
+model-selected tool orders, Agent budgets, argument validation, tool recovery,
+workspace traversal and symlink escape, restricted commands, RSS freshness and
+deduplication, SSRF and redirect checks, streamed response limits, outbox delivery,
+and a complete Agent Loop using the real workspace tools.

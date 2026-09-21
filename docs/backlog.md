@@ -30,13 +30,13 @@ observations, stop by itself, and fail clearly when a budget is exhausted.
 
 ## Day 2 — Safe tools
 
-- [ ] Implement `list_dir`, `read_file`, `search_content`, and `write_file`.
-- [ ] Reject absolute paths, traversal, symlink escape, and oversized I/O.
-- [ ] Implement restricted `bash` with allowlist, timeout, output cap, and clean env.
-- [ ] Implement RSS-backed `search_news` with freshness and result limits.
-- [ ] Implement `fetch_article` with SSRF, timeout, type, and size checks.
-- [ ] Implement subscription lookup and SMTP/development-outbox delivery tools.
-- [ ] Add success, invalid-input, and failure tests for every tool.
+- [x] Implement `list_dir`, `read_file`, `search_content`, and `write_file`.
+- [x] Reject absolute paths, traversal, symlink escape, and oversized I/O.
+- [x] Implement restricted `bash` with allowlist, timeout, output cap, and clean env.
+- [x] Implement RSS-backed `search_news` with freshness and result limits.
+- [x] Implement `fetch_article` with SSRF, timeout, type, and size checks.
+- [x] Implement subscription lookup and SMTP/development-outbox delivery tools.
+- [x] Add success, invalid-input, and failure tests for every tool.
 
 Exit condition: all nine tools are registered and tested; unsafe file, shell, and URL
 inputs are rejected.
