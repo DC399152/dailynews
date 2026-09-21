@@ -1,0 +1,19 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Local runtime data. Keep directory markers and examples in Git.
+data/*
+!data/.gitkeep
+workspace/*
+!workspace/.gitkeep
+
