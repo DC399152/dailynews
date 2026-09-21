@@ -55,11 +55,11 @@ be read back from SQLite.
 
 ## Day 4 — Web UI and scheduling
 
-- [ ] Add subscription form and validation feedback.
-- [ ] Add manual-run action and visible run status.
-- [ ] Add digest history/detail pages with source links.
-- [ ] Add a concise trace inspection view.
-- [ ] Add timezone-aware daily scheduling with documented single-process semantics.
+- [x] Add subscription form and validation feedback.
+- [x] Add manual-run action and visible run status.
+- [x] Add digest history/detail pages with source links.
+- [x] Add a concise trace inspection view.
+- [x] Add timezone-aware daily scheduling with documented single-process semantics.
 
 Exit condition: the required user journey works entirely from the browser.
 

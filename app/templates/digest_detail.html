@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}简报详情 · AI Daily Brief{% endblock %}
+{% block head %}<meta id="digest-id" data-value="{{ digest_id }}">{% endblock %}
+{% block content %}
+<a class="back-link" href="/">← 返回控制台</a>
+<section class="detail-header">
+  <div><p class="eyebrow">DAILY DIGEST</p><h1 id="digest-title">简报详情</h1></div>
+  <span id="digest-status" class="badge">加载中</span>
+</section>
+<article class="card digest-card"><pre id="digest-content">正在加载…</pre></article>
+<section class="card">
+  <div class="card-heading"><div><p class="eyebrow">SOURCES</p><h2>引用来源</h2></div></div>
+  <div id="source-list" class="empty-state">暂无来源。</div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='/digest.js') }}" defer></script>{% endblock %}
+

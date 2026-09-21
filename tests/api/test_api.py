@@ -108,12 +108,15 @@ def test_user_and_subscription_crud_normalizes_preferences(
         )
 
         user = client.get("/api/users/user-1")
+        users = client.get("/api/users")
         subscription = client.get("/api/users/user-1/subscription")
 
     assert generated_user.status_code == 201
     assert len(generated_user.json()["id"]) == 36
     assert user.status_code == 200
     assert user.json()["timezone"] == "Asia/Shanghai"
+    assert users.status_code == 200
+    assert len(users.json()) == 2
     assert subscription.status_code == 200
     assert subscription.json()["topics"] == ["AI agents", "AI coding"]
     assert subscription.json()["delivery_time"] == "09:30:00"
@@ -154,6 +157,7 @@ def test_digest_run_persists_trace_digest_and_outbox(
         run_id = started.json()["id"]
 
         run = client.get(f"/api/runs/{run_id}")
+        runs = client.get("/api/users/user-1/runs")
         tool_calls = client.get(f"/api/runs/{run_id}/tool-calls")
         digests = client.get("/api/users/user-1/digests")
 
@@ -164,6 +168,8 @@ def test_digest_run_persists_trace_digest_and_outbox(
         assert run.json()["input_tokens"] == 44
         assert run.json()["output_tokens"] == 18
         assert run.json()["digest_id"] is not None
+        assert runs.status_code == 200
+        assert runs.json()[0]["id"] == run_id
 
         assert tool_calls.status_code == 200
         assert [call["tool_name"] for call in tool_calls.json()] == [

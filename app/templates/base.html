@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}AI Daily Brief{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">
+        <span class="brand-mark">AI</span>
+        <span>Daily Brief</span>
+      </a>
+      <div class="header-meta">Model-driven · Traceable · Scheduled</div>
+    </header>
+    <main class="page-shell">
+      {% block content %}{% endblock %}
+    </main>
+    <footer>KUAFUAI Agent take-home · Python + FastAPI</footer>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+

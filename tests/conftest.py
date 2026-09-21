@@ -15,6 +15,7 @@ def test_settings(tmp_path: Path) -> Settings:
         app_database_url=f"sqlite:///{tmp_path / 'test.db'}",
         app_workspace_dir=tmp_path / "workspace",
         llm_model="fake-model",
+        scheduler_enabled=False,
     )
 
 

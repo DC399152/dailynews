@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Agent Run · AI Daily Brief{% endblock %}
+{% block head %}<meta id="run-id" data-value="{{ run_id }}">{% endblock %}
+{% block content %}
+<a class="back-link" href="/">← 返回控制台</a>
+<section class="detail-header">
+  <div><p class="eyebrow">AGENT RUN</p><h1 id="run-title">运行详情</h1></div>
+  <span id="run-status" class="badge">加载中</span>
+</section>
+<section class="metrics" id="run-metrics"></section>
+<section class="card">
+  <div class="card-heading"><div><p class="eyebrow">TRACE</p><h2>工具调用轨迹</h2></div></div>
+  <div id="trace-list" class="empty-state">正在加载轨迹…</div>
+</section>
+<section id="run-error" class="error-panel hidden"></section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='/run.js') }}" defer></script>{% endblock %}
+

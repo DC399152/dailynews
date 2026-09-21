@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     smtp_from: str = ""
     smtp_use_tls: bool = True
 
+    scheduler_enabled: bool = True
+
 
 @lru_cache
 def get_settings() -> Settings:

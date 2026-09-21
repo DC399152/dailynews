@@ -107,6 +107,19 @@ The current background runner is intentionally single-process and not durable ac
 server termination. A production multi-replica system would use a transactional
 outbox plus a job queue/worker. That expansion is outside the take-home MVP.
 
+## Web UI and daily scheduling
+
+Day 4 adds thin Jinja entry pages with vanilla JavaScript that consume the same REST
+API used by external clients. The dashboard does not keep a second copy of business
+logic: user creation, subscription updates, manual runs, history, and trace views all
+use `/api` endpoints.
+
+`DailyDigestScheduler` loads enabled subscriptions on startup and creates one
+APScheduler `CronTrigger` per user using their IANA timezone. Subscription updates
+replace or remove that job immediately. Both manual and scheduled requests pass
+through `DigestRunCoordinator`, so validation and the active-run constraint are
+consistent regardless of the trigger source.
+
 RSS endpoints are trusted application configuration, not model-controlled URLs.
 Article URLs are model-controlled and therefore receive stricter validation. DNS
 addresses and every redirect target are checked before requests, although preventing

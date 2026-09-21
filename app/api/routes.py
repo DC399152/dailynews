@@ -18,9 +18,11 @@ from app.api.schemas import (
     UserCreate,
     UserResponse,
 )
-from app.db.models import AgentRun, Digest, RunStatus, Subscription, ToolCallRecord, User
+from app.db.models import AgentRun, Digest, Subscription, ToolCallRecord, User
 from app.db.session import SessionFactory
 from app.services.digest import DigestService
+from app.services.runs import DigestRunCoordinator, RunStartError
+from app.services.scheduler import DailyDigestScheduler
 
 router = APIRouter(prefix="/api")
 
@@ -35,8 +37,18 @@ def get_digest_service(request: Request) -> DigestService:
     return request.app.state.digest_service
 
 
+def get_run_coordinator(request: Request) -> DigestRunCoordinator:
+    return request.app.state.run_coordinator
+
+
+def get_scheduler(request: Request) -> DailyDigestScheduler:
+    return request.app.state.scheduler
+
+
 SessionDep = Annotated[Session, Depends(get_session)]
 DigestServiceDep = Annotated[DigestService, Depends(get_digest_service)]
+RunCoordinatorDep = Annotated[DigestRunCoordinator, Depends(get_run_coordinator)]
+SchedulerDep = Annotated[DailyDigestScheduler, Depends(get_scheduler)]
 
 
 def require_user(session: Session, user_id: str) -> User:
@@ -47,8 +59,6 @@ def require_user(session: Session, user_id: str) -> User:
 
 
 def run_response(run: AgentRun, digest_id: str | None = None) -> AgentRunResponse:
-    if digest_id is None and run.digest is not None:
-        digest_id = run.digest.id
     return AgentRunResponse(
         id=run.id,
         user_id=run.user_id,
@@ -85,6 +95,11 @@ def create_user(payload: UserCreate, session: SessionDep) -> User:
     return user
 
 
+@router.get("/users", response_model=list[UserResponse])
+def list_users(session: SessionDep) -> list[User]:
+    return list(session.scalars(select(User).order_by(User.created_at)))
+
+
 @router.get("/users/{user_id}", response_model=UserResponse)
 def get_user(user_id: str, session: SessionDep) -> User:
     return require_user(session, user_id)
@@ -95,6 +110,7 @@ def upsert_subscription(
     user_id: str,
     payload: SubscriptionUpsert,
     session: SessionDep,
+    scheduler: SchedulerDep,
 ) -> Subscription:
     require_user(session, user_id)
     subscription = session.get(Subscription, user_id)
@@ -108,6 +124,7 @@ def upsert_subscription(
     subscription.enabled = payload.enabled
     session.commit()
     session.refresh(subscription)
+    scheduler.sync_user(user_id)
     return subscription
 
 
@@ -128,38 +145,14 @@ def get_subscription(user_id: str, session: SessionDep) -> Subscription:
 def start_digest_run(
     user_id: str,
     background_tasks: BackgroundTasks,
-    session: SessionDep,
+    coordinator: RunCoordinatorDep,
     service: DigestServiceDep,
 ) -> AgentRunResponse:
-    require_user(session, user_id)
-    subscription = session.get(Subscription, user_id)
-    if subscription is None or not subscription.enabled:
-        raise APIError(
-            409,
-            "subscription_unavailable",
-            "An enabled subscription is required to start a digest",
-        )
-    existing = session.scalar(
-        select(AgentRun).where(
-            AgentRun.user_id == user_id,
-            AgentRun.status.in_((RunStatus.PENDING, RunStatus.RUNNING)),
-        )
-    )
-    if existing is not None:
-        raise APIError(409, "run_already_active", "User already has an active digest run")
-
-    run = AgentRun(
-        user_id=user_id,
-        status=RunStatus.PENDING,
-        model=service.model_name,
-    )
-    session.add(run)
     try:
-        session.commit()
-    except IntegrityError as exc:
-        session.rollback()
-        raise APIError(409, "run_already_active", "User already has an active digest run") from exc
-    session.refresh(run)
+        run = coordinator.create_run(user_id)
+    except RunStartError as exc:
+        status_code = 404 if exc.code == "user_not_found" else 409
+        raise APIError(status_code, exc.code, str(exc)) from exc
     response = run_response(run)
     background_tasks.add_task(service.execute_run, run.id)
     return response
@@ -170,7 +163,22 @@ def get_run(run_id: str, session: SessionDep) -> AgentRunResponse:
     run = session.get(AgentRun, run_id)
     if run is None:
         raise APIError(404, "run_not_found", f"Run does not exist: {run_id}")
-    return run_response(run)
+    digest_id = session.scalar(select(Digest.id).where(Digest.run_id == run.id))
+    return run_response(run, digest_id)
+
+
+@router.get("/users/{user_id}/runs", response_model=list[AgentRunResponse])
+def list_runs(user_id: str, session: SessionDep) -> list[AgentRunResponse]:
+    require_user(session, user_id)
+    runs = list(
+        session.scalars(
+            select(AgentRun).where(AgentRun.user_id == user_id).order_by(AgentRun.created_at.desc())
+        )
+    )
+    digest_ids = dict(
+        session.execute(select(Digest.run_id, Digest.id).where(Digest.user_id == user_id)).all()
+    )
+    return [run_response(run, digest_ids.get(run.id)) for run in runs]
 
 
 @router.get("/runs/{run_id}/tool-calls", response_model=list[ToolCallResponse])

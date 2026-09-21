@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}AI Daily Brief · 控制台{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">PERSONAL AI NEWS AGENT</p>
+    <h1>每天只看真正与你有关的 AI 进展。</h1>
+    <p class="hero-copy">设置身份和关注方向，让 Agent 自主搜索、筛选、整理并推送简报。</p>
+  </div>
+  <div class="hero-status"><span class="status-dot"></span> Agent service ready</div>
+</section>
+
+<div id="notice" class="notice hidden" role="status"></div>
+
+<section class="grid two-column">
+  <article class="card">
+    <div class="card-heading">
+      <div><p class="eyebrow">PROFILE</p><h2>用户身份</h2></div>
+      <select id="user-select" aria-label="选择用户"><option value="">选择用户</option></select>
+    </div>
+    <form id="user-form" class="form-stack">
+      <label>身份描述<textarea name="identity" required placeholder="例如：正在寻找 Agent 开发实习的软件工程学生"></textarea></label>
+      <div class="form-row">
+        <label>邮箱<input name="email" type="email" required placeholder="you@example.com"></label>
+        <label>时区<input name="timezone" value="Asia/Shanghai" required></label>
+      </div>
+      <button class="button secondary" type="submit">创建新用户</button>
+    </form>
+  </article>
+
+  <article class="card" id="subscription-card">
+    <div class="card-heading">
+      <div><p class="eyebrow">SUBSCRIPTION</p><h2>订阅偏好</h2></div>
+      <span id="schedule-badge" class="badge">尚未配置</span>
+    </div>
+    <form id="subscription-form" class="form-stack">
+      <label>关注话题<input name="topics" placeholder="AI Agent, AI Coding, LLM Evaluation"></label>
+      <label>关键词<input name="keywords" placeholder="tool calling, agent harness"></label>
+      <label>排除词<input name="excluded_keywords" placeholder="融资传闻, 加密货币"></label>
+      <div class="form-row">
+        <label>每日推送时间<input name="delivery_time" type="time" value="09:00" required></label>
+        <label class="checkbox-label"><input name="enabled" type="checkbox" checked> 启用每日推送</label>
+      </div>
+      <button class="button primary" type="submit">保存订阅</button>
+    </form>
+    <button id="run-button" class="button run-button" type="button">立即生成一份简报 <span>→</span></button>
+  </article>
+</section>
+
+<section class="grid two-column history-grid">
+  <article class="card">
+    <div class="card-heading"><div><p class="eyebrow">RUNS</p><h2>最近运行</h2></div></div>
+    <div id="runs-list" class="empty-state">选择用户后查看运行记录。</div>
+  </article>
+  <article class="card">
+    <div class="card-heading"><div><p class="eyebrow">DIGESTS</p><h2>历史简报</h2></div></div>
+    <div id="digests-list" class="empty-state">选择用户后查看历史简报。</div>
+  </article>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='/dashboard.js') }}" defer></script>{% endblock %}
+

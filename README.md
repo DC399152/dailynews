@@ -11,10 +11,13 @@ termination are decided by the model rather than encoded as a fixed pipeline.
 
 ## Current status
 
-Day 0 through Day 3 are complete. The repository now includes the engineering
+Day 0 through Day 4 are complete. The repository now includes the engineering
 baseline, model-driven Agent Loop, all nine tools, persistent SQLAlchemy models,
 Alembic migrations, a database-backed subscription provider, run orchestration, and
-REST APIs for users, subscriptions, runs, traces, and digests.
+REST APIs for users, subscriptions, runs, traces, and digests. A responsive web UI
+supports profile creation, subscription editing, manual runs, live status, trace
+inspection, and digest history. APScheduler registers one timezone-aware daily job per
+enabled subscription.
 
 The Loop deliberately has no news-specific branching. Tests demonstrate that the
 same runtime follows `search -> write` or `write -> search` solely from model tool
@@ -105,6 +108,8 @@ Open `http://localhost:8000/docs` or check:
 curl http://localhost:8000/health
 ```
 
+The user-facing dashboard is at `http://localhost:8000/`.
+
 Run quality checks:
 
 ```bash
@@ -140,6 +145,17 @@ GET  /api/digests/{digest_id}
 Starting a run returns `202 Accepted`. The in-process background task moves it through
 `pending`, `running`, and a terminal `completed` or `failed` state. A partial unique
 database index prevents the same user from having two active runs.
+
+## Scheduling
+
+Each enabled subscription is registered as an APScheduler `CronTrigger` using the
+user's IANA timezone and selected delivery time. Jobs are synchronized on application
+startup and immediately after subscription updates. Disable scheduling for tests or
+API-only development with `SCHEDULER_ENABLED=false`.
+
+The scheduler and background execution are intentionally single-process for this
+take-home. A production multi-replica deployment should replace them with a durable
+queue and transactional outbox.
 
 ## Configuration and secrets
 
