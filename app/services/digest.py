@@ -23,8 +23,18 @@ from app.db.session import SessionFactory
 from app.services.prompts import DIGEST_SYSTEM_PROMPT, build_digest_goal
 from app.settings import Settings
 from app.tools.defaults import build_default_tool_registry
+from app.tools.registry import ToolRegistry
+from app.tools.subscription import SubscriptionProvider
 
 ModelClientFactory = Callable[[], ModelClient]
+ToolRegistryFactory = Callable[[Settings, SubscriptionProvider], ToolRegistry]
+
+
+def default_tool_registry_factory(
+    settings: Settings,
+    subscriptions: SubscriptionProvider,
+) -> ToolRegistry:
+    return build_default_tool_registry(settings, subscriptions=subscriptions)
 
 
 class DigestService:
@@ -34,10 +44,12 @@ class DigestService:
         settings: Settings,
         sessions: SessionFactory,
         model_factory: ModelClientFactory,
+        tool_registry_factory: ToolRegistryFactory | None = None,
     ) -> None:
         self._settings = settings
         self._sessions = sessions
         self._model_factory = model_factory
+        self._tool_registry_factory = tool_registry_factory or default_tool_registry_factory
 
     @property
     def model_name(self) -> str:
@@ -50,10 +62,7 @@ class DigestService:
 
         try:
             provider = SQLAlchemySubscriptionProvider(self._sessions)
-            tools = build_default_tool_registry(
-                self._settings,
-                subscriptions=provider,
-            )
+            tools = self._tool_registry_factory(self._settings, provider)
             loop = AgentLoop(
                 model=self._model_factory(),
                 tools=tools,

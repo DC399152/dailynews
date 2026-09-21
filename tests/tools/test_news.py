@@ -49,6 +49,35 @@ async def test_news_search_filters_old_items_normalizes_and_deduplicates() -> No
 
 
 @pytest.mark.asyncio
+async def test_news_search_applies_include_and_exclude_preferences() -> None:
+    recent = format_datetime(datetime.now(UTC) - timedelta(hours=1))
+    rss = f"""<?xml version="1.0"?>
+    <rss version="2.0"><channel><title>AI News</title>
+      <item><title>Agent harness release</title><link>https://example.com/harness</link>
+        <pubDate>{recent}</pubDate><description>New tool calling runtime</description></item>
+      <item><title>Agent token launch</title><link>https://example.com/token</link>
+        <pubDate>{recent}</pubDate>
+        <description>Cryptocurrency for autonomous agents</description></item>
+      <item><title>Database update</title><link>https://example.com/database</link>
+        <pubDate>{recent}</pubDate><description>New SQL engine</description></item>
+    </channel></rss>"""
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, content=rss.encode()))
+    ) as client:
+        tool = NewsSearchTool(endpoints=("https://search.test/?q={query}",), client=client)
+        result = await tool.search_news(
+            SearchNewsArguments(
+                query="AI",
+                include_keywords=["agent", "tool calling"],
+                exclude_keywords=["cryptocurrency"],
+            )
+        )
+
+    assert [item["title"] for item in result["items"]] == ["Agent harness release"]  # type: ignore[index]
+
+
+@pytest.mark.asyncio
 async def test_news_search_understands_atom_iso_dates() -> None:
     published = (datetime.now(UTC) - timedelta(hours=2)).isoformat().replace("+00:00", "Z")
     atom = f"""<?xml version="1.0"?>

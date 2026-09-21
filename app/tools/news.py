@@ -30,6 +30,8 @@ class SearchNewsArguments(BaseModel):
     query: str = Field(min_length=1, max_length=200)
     hours: int = Field(default=24, ge=1, le=24 * 30)
     limit: int = Field(default=10, ge=1, le=50)
+    include_keywords: list[str] = Field(default_factory=list, max_length=100)
+    exclude_keywords: list[str] = Field(default_factory=list, max_length=100)
 
 
 class FetchArticleArguments(BaseModel):
@@ -76,6 +78,16 @@ class NewsSearchTool:
                 title = unescape(str(entry.get("title", "")).strip())
                 if not link or not title:
                     continue
+                summary = BeautifulSoup(str(entry.get("summary", "")), "html.parser").get_text(
+                    " ", strip=True
+                )[:500]
+                if not self._matches_preferences(
+                    title,
+                    summary,
+                    include_keywords=arguments.include_keywords,
+                    exclude_keywords=arguments.exclude_keywords,
+                ):
+                    continue
                 published_at = self._published_at(entry)
                 if published_at is not None and published_at < cutoff:
                     continue
@@ -94,9 +106,7 @@ class NewsSearchTool:
                         "url": normalized_link,
                         "source": source_name or urlsplit(link).hostname or "unknown",
                         "published_at": published_at.isoformat() if published_at else None,
-                        "summary": BeautifulSoup(
-                            str(entry.get("summary", "")), "html.parser"
-                        ).get_text(" ", strip=True)[:500],
+                        "summary": summary,
                     }
                 )
 
@@ -106,6 +116,25 @@ class NewsSearchTool:
             "items": items[: arguments.limit],
             "failed_sources": failed_sources,
         }
+
+    @staticmethod
+    def _matches_preferences(
+        title: str,
+        summary: str,
+        *,
+        include_keywords: Sequence[str],
+        exclude_keywords: Sequence[str],
+    ) -> bool:
+        searchable = f"{title}\n{summary}".casefold()
+        includes = tuple(
+            keyword.strip().casefold() for keyword in include_keywords if keyword.strip()
+        )
+        excludes = tuple(
+            keyword.strip().casefold() for keyword in exclude_keywords if keyword.strip()
+        )
+        if any(keyword in searchable for keyword in excludes):
+            return False
+        return not includes or any(keyword in searchable for keyword in includes)
 
     async def _fetch(self, client: httpx.AsyncClient, url: str) -> bytes | Exception:
         try:

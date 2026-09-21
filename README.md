@@ -1,5 +1,7 @@
 # AI Daily Brief
 
+[![CI](https://github.com/DC399152/dailynews/actions/workflows/ci.yml/badge.svg)](https://github.com/DC399152/dailynews/actions/workflows/ci.yml)
+
 AI Daily Brief is a personalized AI-news assistant built for the KUAFUAI Agent
 development take-home assignment. A user describes who they are and what they care
 about; a model-driven agent then chooses which tools to call, gathers recent news,
@@ -11,13 +13,15 @@ termination are decided by the model rather than encoded as a fixed pipeline.
 
 ## Current status
 
-Day 0 through Day 4 are complete. The repository now includes the engineering
+Day 0 through Day 5 are complete. The repository now includes the engineering
 baseline, model-driven Agent Loop, all nine tools, persistent SQLAlchemy models,
 Alembic migrations, a database-backed subscription provider, run orchestration, and
 REST APIs for users, subscriptions, runs, traces, and digests. A responsive web UI
 supports profile creation, subscription editing, manual runs, live status, trace
 inspection, and digest history. APScheduler registers one timezone-aware daily job per
-enabled subscription.
+enabled subscription. A credential-free end-to-end test covers the complete API →
+Agent → news → workspace → outbox → database workflow, and GitHub Actions runs lint,
+format, and test checks on every push and pull request.
 
 The Loop deliberately has no news-specific branching. Tests demonstrate that the
 same runtime follows `search -> write` or `write -> search` solely from model tool
@@ -62,7 +66,7 @@ Product tools:
 
 ```text
 get_subscription(user_id)
-search_news(query, hours, limit)
+search_news(query, hours, limit, include_keywords, exclude_keywords)
 fetch_article(url)
 send_digest(user_id, subject, content)
 ```
@@ -71,6 +75,9 @@ All filesystem access is confined to `workspace/`. Shell execution uses a comman
 allowlist, fixed working directory, timeout, output cap, and filtered environment.
 Article fetching rejects private-network targets and caps response size. See
 [`docs/tool-security.md`](docs/tool-security.md) for precise controls and limitations.
+News search applies include/exclude preferences deterministically to titles and
+summaries before returning candidates. The model still decides the queries, tool order,
+and which filtered sources belong in the brief.
 
 ## Architecture
 
@@ -116,6 +123,10 @@ Run quality checks:
 uv run ruff check .
 uv run pytest
 ```
+
+The same commands run in
+[GitHub Actions](https://github.com/DC399152/dailynews/actions/workflows/ci.yml) with
+Python 3.12 and the locked dependency set.
 
 ## Docker
 
@@ -175,5 +186,6 @@ feature must remain runnable, tested, and reviewable before the next feature beg
 The test suite does not require model, news, or SMTP credentials. It covers alternate
 model-selected tool orders, Agent budgets, argument validation, tool recovery,
 workspace traversal and symlink escape, restricted commands, RSS freshness and
-deduplication, SSRF and redirect checks, streamed response limits, outbox delivery,
-and a complete Agent Loop using the real workspace tools.
+deduplication, preference filtering, SSRF and redirect checks, streamed response limits,
+outbox delivery, API/database integration, and a complete deterministic workflow using
+a fake model and news source with the real workspace and delivery tools.

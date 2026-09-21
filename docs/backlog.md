@@ -65,12 +65,12 @@ Exit condition: the required user journey works entirely from the browser.
 
 ## Day 5 — Reliability and CI
 
-- [ ] Test tool failure recovery and budget exhaustion.
-- [ ] Test path traversal, unsafe commands, private URLs, and oversized content.
-- [ ] Test news deduplication and preference-based filtering.
-- [ ] Add API/database integration tests.
-- [ ] Add a credential-free end-to-end test using fake model, news, and delivery.
-- [ ] Add GitHub Actions for Ruff and pytest.
+- [x] Test tool failure recovery and budget exhaustion.
+- [x] Test path traversal, unsafe commands, private URLs, and oversized content.
+- [x] Test news deduplication and preference-based filtering.
+- [x] Add API/database integration tests.
+- [x] Add a credential-free end-to-end test using fake model, news, and delivery.
+- [x] Add GitHub Actions for Ruff and pytest.
 
 Exit condition: CI passes and the complete mocked workflow is deterministic.
 

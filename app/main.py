@@ -10,7 +10,7 @@ from app.agent.model import ModelClient, OpenAICompatibleModelClient
 from app.api.errors import install_error_handlers
 from app.api.routes import router
 from app.db.session import create_database_engine, create_session_factory
-from app.services.digest import DigestService
+from app.services.digest import DigestService, ToolRegistryFactory
 from app.services.runs import DigestRunCoordinator
 from app.services.scheduler import DailyDigestScheduler
 from app.settings import Settings, get_settings
@@ -22,6 +22,7 @@ def create_app(
     settings: Settings | None = None,
     engine: Engine | None = None,
     model_factory: Callable[[], ModelClient] | None = None,
+    tool_registry_factory: ToolRegistryFactory | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     engine = engine or create_database_engine(settings.app_database_url)
@@ -39,6 +40,7 @@ def create_app(
         settings=settings,
         sessions=sessions,
         model_factory=model_factory,
+        tool_registry_factory=tool_registry_factory,
     )
     run_coordinator = DigestRunCoordinator(
         sessions=sessions,
