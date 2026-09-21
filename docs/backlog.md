@@ -43,12 +43,12 @@ inputs are rejected.
 
 ## Day 3 — Persistence and API workflow
 
-- [ ] Add SQLAlchemy models for users, subscriptions, digests, runs, and tool calls.
-- [ ] Add Alembic and the initial migration.
-- [ ] Add subscription create/read/update endpoints.
-- [ ] Add manual digest-run endpoint and status endpoint.
-- [ ] Persist run transitions, tool calls, sources, and completed digests.
-- [ ] Prevent duplicate active runs for the same user.
+- [x] Add SQLAlchemy models for users, subscriptions, digests, runs, and tool calls.
+- [x] Add Alembic and the initial migration.
+- [x] Add subscription create/read/update endpoints.
+- [x] Add manual digest-run endpoint and status endpoint.
+- [x] Persist run transitions, tool calls, sources, and completed digests.
+- [x] Prevent duplicate active runs for the same user.
 
 Exit condition: an API request launches a real agent run and its complete outcome can
 be read back from SQLite.

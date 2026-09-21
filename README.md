@@ -11,11 +11,10 @@ termination are decided by the model rather than encoded as a fixed pipeline.
 
 ## Current status
 
-Day 0 through Day 2 are complete. The repository now includes the engineering
-baseline; a tested, model-driven Agent Loop; and all nine planned tools. The tool
-layer confines file access to the workspace, restricts shell execution, normalizes
-RSS results, checks article URLs against private-network access, and supports SMTP or
-a credential-free development outbox.
+Day 0 through Day 3 are complete. The repository now includes the engineering
+baseline, model-driven Agent Loop, all nine tools, persistent SQLAlchemy models,
+Alembic migrations, a database-backed subscription provider, run orchestration, and
+REST APIs for users, subscriptions, runs, traces, and digests.
 
 The Loop deliberately has no news-specific branching. Tests demonstrate that the
 same runtime follows `search -> write` or `write -> search` solely from model tool
@@ -96,6 +95,7 @@ Prerequisites: Python 3.11–3.13 and [uv](https://docs.astral.sh/uv/).
 ```bash
 cp .env.example .env
 uv sync
+uv run alembic upgrade head
 uv run uvicorn app.main:app --reload
 ```
 
@@ -120,7 +120,26 @@ docker compose up --build
 ```
 
 Runtime database and workspace files are stored in the local `data/` and
-`workspace/` directories and are ignored by Git.
+`workspace/` directories and are ignored by Git. The container applies Alembic
+migrations before starting Uvicorn.
+
+## API workflow
+
+After startup, use `http://localhost:8000/docs` to execute the complete backend flow:
+
+```text
+POST /api/users
+PUT  /api/users/{user_id}/subscription
+POST /api/users/{user_id}/digest-runs
+GET  /api/runs/{run_id}
+GET  /api/runs/{run_id}/tool-calls
+GET  /api/users/{user_id}/digests
+GET  /api/digests/{digest_id}
+```
+
+Starting a run returns `202 Accepted`. The in-process background task moves it through
+`pending`, `running`, and a terminal `completed` or `failed` state. A partial unique
+database index prevents the same user from having two active runs.
 
 ## Configuration and secrets
 

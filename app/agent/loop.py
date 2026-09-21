@@ -174,6 +174,8 @@ class AgentLoop:
                         "success": execution.success,
                         "duration_ms": execution.duration_ms,
                         "error_code": execution.error_code,
+                        "error_message": execution.error_message,
+                        "output": execution.output,
                     },
                 )
                 messages.append(

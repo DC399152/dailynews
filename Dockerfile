@@ -11,11 +11,12 @@ COPY pyproject.toml uv.lock* README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY app ./app
+COPY alembic.ini ./
+COPY migrations ./migrations
 RUN uv sync --frozen --no-dev
 
 RUN mkdir -p /app/data /app/workspace
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

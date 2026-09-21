@@ -87,9 +87,25 @@ The submission scheduler is designed for one application process. A production
 multi-replica deployment would move scheduling and jobs to a dedicated worker and
 queue. This trade-off is deliberate and will be documented rather than disguised.
 
-The subscription tool currently depends on a small provider protocol and uses an
-in-memory implementation in the default factory. Day 3 will replace that provider
-with the SQLAlchemy repository without changing the Agent-facing tool contract.
+The subscription tool depends on a small provider protocol. Product runs use the
+SQLAlchemy provider while isolated tool tests can use the in-memory implementation;
+the Agent-facing contract is identical.
+
+## Persistence and run orchestration
+
+Day 3 adds five tables managed by Alembic: `users`, `subscriptions`, `agent_runs`,
+`tool_calls`, and `digests`. The API creates a pending run and schedules an in-process
+background task. `DigestService` owns state transitions, builds a fresh Agent runtime,
+persists a bounded result preview for each tool call, and guarantees a terminal state
+for ordinary model, tool, and persistence failures.
+
+A SQLite partial unique index on active statuses prevents two pending/running jobs for
+one user even when application-level checks race. This is stronger than relying only
+on the UI or a pre-insert query.
+
+The current background runner is intentionally single-process and not durable across
+server termination. A production multi-replica system would use a transactional
+outbox plus a job queue/worker. That expansion is outside the take-home MVP.
 
 RSS endpoints are trusted application configuration, not model-controlled URLs.
 Article URLs are model-controlled and therefore receive stricter validation. DNS
