@@ -51,6 +51,23 @@ and CI runs deterministic and credential-free.
 
 ## Runtime flow
 
+```mermaid
+flowchart LR
+    User["User / Scheduler"] --> API["FastAPI + Web UI"]
+    API --> Coordinator["DigestRunCoordinator"]
+    Coordinator --> DB[("SQLite")]
+    Coordinator --> Service["DigestService"]
+    Service --> Loop["Model-driven AgentLoop"]
+    Loop <--> Model["OpenAI-compatible LLM"]
+    Loop <--> Registry["Validated ToolRegistry"]
+    Registry --> Workspace["Isolated workspace"]
+    Registry --> News["RSS + article fetch"]
+    Registry --> Delivery["SMTP / dev outbox"]
+    Service --> DB
+    Service --> Trace["Run + tool-call trace"]
+    Trace --> DB
+```
+
 1. A manual action or scheduler creates an `AgentRun` for a user.
 2. The digest service supplies the goal and user identifier to the Agent Loop.
 3. The model returns zero or more function calls.
@@ -73,13 +90,15 @@ and per-tool timeouts—are returned to the model as structured observations so 
 recover. Invalid model responses and exhausted run budgets instead raise typed errors
 that retain the trace and counters accumulated before failure.
 
-## Planned persistence
+## Persistence model
 
 - `users`: identity, email, timezone;
 - `subscriptions`: topics, keywords, exclusions, delivery time, enabled state;
 - `digests`: content, cited sources, status, delivery timestamp;
 - `agent_runs`: model, status, budgets, timing, final error;
 - `tool_calls`: turn, name, validated arguments, result preview, latency, success.
+
+All five tables are implemented through SQLAlchemy and created by Alembic migrations.
 
 ## Operational limitations
 
@@ -124,3 +143,32 @@ RSS endpoints are trusted application configuration, not model-controlled URLs.
 Article URLs are model-controlled and therefore receive stricter validation. DNS
 addresses and every redirect target are checked before requests, although preventing
 DNS rebinding completely would require a transport that pins the validated address.
+
+## Reliability boundary
+
+The deterministic test suite replaces only external uncertainty: the model, RSS source,
+and SMTP server. It keeps the real Agent Loop, tool validation, filesystem, development
+outbox, API, SQLAlchemy repositories, and SQLite constraints. This makes CI repeatable
+without turning the end-to-end test into a collection of mocked internal functions.
+
+News preference filtering is intentionally split across two layers. The model chooses
+queries and source selection after reading the subscription; `search_news` also applies
+include/exclude terms to titles and summaries as a deterministic guardrail. This does
+not claim semantic relevance—the model still owns that judgment.
+
+## Deliberate trade-offs and limitations
+
+- **Single-process jobs:** APScheduler and FastAPI background tasks are suitable for the
+  take-home, but are not durable across crashes and cannot coordinate multiple replicas.
+- **SQLite:** ideal for five-minute local setup, but a production service should use a
+  managed relational database with operational backups and stronger concurrency.
+- **No authentication:** the UI trusts the caller and must not be exposed publicly as-is.
+- **RSS availability:** upstream feeds can fail or rate-limit; partial source failures are
+  reported to the model, but there is no durable retry queue.
+- **Prompt-level source selection:** keyword filtering is deterministic, while semantic
+  relevance, synthesis quality, and factual accuracy still depend on the configured model.
+- **Trace previews:** persisted tool results are bounded previews, not a full event log.
+- **SSRF boundary:** host resolution and redirects are checked, but complete DNS-rebinding
+  protection would require connecting to a pinned validated IP.
+- **No durable resume:** interrupted Agent runs end in failure rather than resuming from a
+  checkpoint. That is intentionally outside the one-week assignment scope.

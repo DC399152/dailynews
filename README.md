@@ -124,6 +124,12 @@ uv run ruff check .
 uv run pytest
 ```
 
+Run the complete submission preflight, including tracked-file and Compose checks:
+
+```bash
+./scripts/preflight.sh
+```
+
 The same commands run in
 [GitHub Actions](https://github.com/DC399152/dailynews/actions/workflows/ci.yml) with
 Python 3.12 and the locked dependency set.
@@ -180,6 +186,16 @@ development outbox so the complete flow remains testable without mail credential
 The ordered implementation backlog and acceptance criteria are in
 [`docs/backlog.md`](docs/backlog.md). Development is intentionally incremental: each
 feature must remain runnable, tested, and reviewable before the next feature begins.
+
+## Submission materials
+
+- [`docs/demo-script.md`](docs/demo-script.md): timed three-minute recording script;
+- [`docs/interview-notes.md`](docs/interview-notes.md): architecture, security, testing,
+  trade-offs, corrected bugs, and AI-assisted development notes;
+- [`docs/submission-checklist.md`](docs/submission-checklist.md): automated evidence and
+  the remaining real-run screenshot/video checklist;
+- [`docs/architecture.md`](docs/architecture.md): final architecture diagram and explicit
+  production limitations.
 
 ## Test coverage
 

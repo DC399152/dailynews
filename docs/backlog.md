@@ -76,12 +76,14 @@ Exit condition: CI passes and the complete mocked workflow is deterministic.
 
 ## Day 6 — Submission
 
-- [ ] Test README setup from a clean checkout.
-- [ ] Build and run the container.
-- [ ] Audit tracked files and logs for credentials or personal data.
-- [ ] Add screenshots, final architecture diagram, trade-offs, and limitations.
+- [x] Test README setup from a clean checkout.
+- [x] Build and run the container.
+- [x] Audit tracked files and logs for credentials or personal data.
+- [x] Add a final architecture diagram, trade-offs, and limitations.
+- [ ] Capture screenshots from a real model-driven run.
 - [ ] Record a three-minute demo following a prepared script.
-- [ ] Prepare interview notes covering decisions, AI-assisted work, and corrected bugs.
+- [x] Prepare the demo script and interview notes covering decisions, AI-assisted work,
+  and corrected bugs.
 
 Exit condition: a reviewer can start the project in five minutes and reproduce the
 demonstrated workflow.
